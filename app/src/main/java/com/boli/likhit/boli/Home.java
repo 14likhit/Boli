@@ -32,25 +32,25 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class Home extends AppCompatActivity {
+public class Home extends AppCompatActivity implements TextToSpeech.OnInitListener{
 
     //Request code for speech input
     private static final int REQ_CODE_SPEECH_INPUT=100;
     //view variables
     private TextView translated,translated2;
-    private FloatingActionButton mike;
+    private FloatingActionButton mike,mike2;
     //Language Translator api
     private String translate_api="https://api.mymemory.translated.net/get?";
     //private String translate_api="https://api.mymemory.translated.net/get?q=what%20is%20this&langpair=en|hi";
     private String audioOutput;
-    //private TextToSpeech tts;
+    private TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        //tts=new TextToSpeech(this,this);
+        tts=new TextToSpeech(this,this);
         //initiating views
         translated=(TextView)findViewById(R.id.translated);
         translated2=(TextView)findViewById(R.id.translated2);
@@ -62,15 +62,15 @@ public class Home extends AppCompatActivity {
                 startVoiceInput();
             }
         });
-//        mike2=(FloatingActionButton)findViewById(R.id.mike2);
-//        mike2.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                speakOut();
-//implements TextToSpeech.OnInitListener
-//            }
-//        });
+        mike2=(FloatingActionButton)findViewById(R.id.mike2);
+        mike2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                speakOut();
+
+            }
+        });
     }
 
     public void startVoiceInput(){
@@ -105,6 +105,7 @@ public class Home extends AppCompatActivity {
                     //calling translate method to translate english to hindi
                     translate(audioOutput);
 
+
                 }
                 break;
         }
@@ -126,6 +127,7 @@ public class Home extends AppCompatActivity {
                             //setting text in translation view.
                             JSONObject jObj=response.getJSONObject("responseData");
                             translated2.setText(jObj.getString("translatedText"));
+                            speakOut();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -147,34 +149,35 @@ public class Home extends AppCompatActivity {
 //        requestQueue.add(jsonObjectRequest);
     }
 
-//    @Override
-//    protected void onDestroy() {
-//        //shutting down tts
-//        if(tts!=null){
-//            tts.stop();
-//            tts.shutdown();
-//        }
-//        super.onDestroy();
-//    }
-//
-//    @Override
-//    public void onInit(int status) {
-//        if(status==TextToSpeech.SUCCESS){
-//            int result=tts.setLanguage(Locale.ENGLISH);
-//
-//            if(result==TextToSpeech.LANG_MISSING_DATA || result==TextToSpeech.LANG_NOT_SUPPORTED){
-//                Log.e("TTS","Language not supported");
-//            }else{
-//               // mike2.setEnabled(true);
-//                speakOut();
-//            }
-//        }else{
-//            Log.e("TTS","Initialisation Failed");
-//        }
-//    }
-//
-//    private void speakOut(){
-//        String text=translated2.getText().toString();
-//        tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,null);
-//    }
+    @Override
+    protected void onDestroy() {
+        //shutting down tts
+        if(tts!=null){
+            tts.stop();
+            tts.shutdown();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    public void onInit(int status) {
+        if(status==TextToSpeech.SUCCESS){
+            int result=tts.setLanguage(new Locale("hi"));
+
+            if(result==TextToSpeech.LANG_MISSING_DATA || result==TextToSpeech.LANG_NOT_SUPPORTED){
+                Log.e("TTS","Language not supported");
+                Toast.makeText(getApplicationContext(),"Playback Translated Language not supported in your device",Toast.LENGTH_SHORT).show();
+            }else{
+               mike2.setEnabled(true);
+                speakOut();
+            }
+        }else{
+            Log.e("TTS","Initialisation Failed");
+        }
+    }
+
+    private void speakOut(){
+        String text=translated2.getText().toString();
+        tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,null);
+    }
 }
